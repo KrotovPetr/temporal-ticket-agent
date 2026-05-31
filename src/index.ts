@@ -1,3 +1,4 @@
+import { ConfigurableHttpTrackerAdapter } from "./adapters/configurableHTTPTrackerAdapter.js";
 import { HttpTrackerAdapter } from "./adapters/httpTrackerAdapter.js";
 import { loadConfig } from "./config.js";
 import { startDemoTrackerServer } from "./demo-tracker/server.js";
@@ -22,19 +23,36 @@ function createLlmClient(config: ReturnType<typeof loadConfig>): LlmClient {
   });
 }
 
+function createTicketSource(config: ReturnType<typeof loadConfig>) {
+  if (config.tracker.provider === "configurable-http") {
+    if (!config.tracker.configPath) {
+      throw new Error(
+        "TRACKER_CONFIG_PATH is required for configurable-http tracker provider",
+      );
+    }
+
+    return new ConfigurableHttpTrackerAdapter({
+      configPath: config.tracker.configPath,
+    });
+  }
+
+  return new HttpTrackerAdapter({
+    baseUrl: config.tracker.baseUrl,
+    apiKey: config.tracker.apiKey,
+  });
+}
+
 async function main(): Promise<void> {
   const mode = process.argv[2] ?? "demo-all";
   const config = loadConfig();
 
-  const ticketSource = new HttpTrackerAdapter({
-    baseUrl: config.tracker.baseUrl,
-    apiKey: config.tracker.apiKey,
-  });
-
+  const ticketSource = createTicketSource(config);
   const llmClient = createLlmClient(config);
 
   console.log(`[app] mode=${mode}`);
+  console.log(`[app] trackerProvider=${config.tracker.provider}`);
   console.log(`[app] tracker=${config.tracker.baseUrl}`);
+  console.log(`[app] trackerConfigPath=${config.tracker.configPath ?? ""}`);
   console.log(`[app] llmProvider=${config.llm.provider}`);
   console.log(`[app] llmApiStyle=${config.llm.apiStyle}`);
 

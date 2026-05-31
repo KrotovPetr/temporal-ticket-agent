@@ -1,8 +1,10 @@
 import type { AutomationPolicy } from "./types.js";
 
+export type TrackerProvider = "http" | "configurable-http";
+
 export type LlmProvider = "mock" | "universal";
 
-export type LlmApiStyle = "chat-completions" | "responses";
+export type LlmApiStyle = "chat-completions" | "responses" | "responses-raw";
 
 export type AppConfig = {
   temporal: {
@@ -14,8 +16,10 @@ export type AppConfig = {
   pollIntervalMs: number;
 
   tracker: {
+    provider: TrackerProvider;
     baseUrl: string;
     apiKey?: string;
+    configPath?: string;
   };
 
   llm: {

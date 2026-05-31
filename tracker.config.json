@@ -1,0 +1,87 @@
+{
+  "name": "yandex-tracker",
+  "operations": {
+    "listTickets": {
+      "method": "POST",
+      "url": "https://api.tracker.yandex.net/v2/issues/_search",
+      "headers": {
+        "Authorization": "OAuth {{$env.YANDEX_TRACKER_TOKEN}}",
+        "X-Org-ID": "{{$env.YANDEX_TRACKER_ORG_ID}}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "filter": {
+          "queue": "{{$env.YANDEX_TRACKER_QUEUE}}"
+        },
+        "perPage": 50
+      },
+      "response": {
+        "itemsPath": "$"
+      }
+    },
+    "addLabels": {
+      "method": "PATCH",
+      "url": "https://api.tracker.yandex.net/v2/issues/{{ticketId}}",
+      "headers": {
+        "Authorization": "OAuth {{$env.YANDEX_TRACKER_TOKEN}}",
+        "X-Org-ID": "{{$env.YANDEX_TRACKER_ORG_ID}}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "tags": "{{labels}}"
+      }
+    },
+    "addComment": {
+      "method": "POST",
+      "url": "https://api.tracker.yandex.net/v2/issues/{{ticketId}}/comments",
+      "headers": {
+        "Authorization": "OAuth {{$env.YANDEX_TRACKER_TOKEN}}",
+        "X-Org-ID": "{{$env.YANDEX_TRACKER_ORG_ID}}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "text": "{{comment}}"
+      }
+    },
+    "markProcessed": {
+      "method": "PATCH",
+      "url": "https://api.tracker.yandex.net/v2/issues/{{ticketId}}",
+      "headers": {
+        "Authorization": "OAuth {{$env.YANDEX_TRACKER_TOKEN}}",
+        "X-Org-ID": "{{$env.YANDEX_TRACKER_ORG_ID}}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "tags": "{{labels}}"
+      }
+    }
+  },
+  "mapping": {
+    "id": "$.key",
+    "title": "$.summary",
+    "description": "$.description",
+    "url": "https://tracker.yandex.ru/{{id}}",
+    "labels": "$.tags",
+    "attributes": {
+      "status": "$.status.display",
+      "priority": "$.priority.display",
+      "updatedAt": "$.updatedAt"
+    },
+    "metadata": {
+      "source": "yandex-tracker",
+      "rawId": "$.id",
+      "self": "$.self"
+    }
+  },
+  "filters": {
+    "requiredLabels": ["ai-candidate"],
+    "excludedLabels": ["ai-processed"]
+  },
+  "labelMapping": {
+    "ai:processed": "ai-processed",
+    "ai:llm-candidate": "ai-llm-candidate",
+    "ai:human-required": "ai-human-required",
+    "ai:rejected": "ai-rejected",
+    "ai:failed": "ai-failed"
+  }
+}

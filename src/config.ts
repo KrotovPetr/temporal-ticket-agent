@@ -1,5 +1,10 @@
 import "dotenv/config";
-import type { AppConfig, LlmApiStyle, LlmProvider } from "./configTypes.js";
+import type {
+  AppConfig,
+  LlmApiStyle,
+  LlmProvider,
+  TrackerProvider,
+} from "./configTypes.js";
 import type { TicketCategory } from "./types.js";
 
 function getEnv(name: string, fallback?: string): string {
@@ -36,7 +41,10 @@ function parseAllowedCategories(value: string): TicketCategory[] {
   );
 }
 
-function parseJsonObjectEnv(name: string, fallback: string): Record<string, string> {
+function parseJsonObjectEnv(
+  name: string,
+  fallback: string,
+): Record<string, string> {
   const raw = getEnv(name, fallback);
 
   try {
@@ -54,7 +62,7 @@ function parseJsonObjectEnv(name: string, fallback: string): Record<string, stri
 
     for (const [key, value] of Object.entries(parsed)) {
       if (typeof value !== "string") {
-        throw new Error(`header "${key}" value must be a string`);
+        throw new Error(`value of "${key}" must be a string`);
       }
 
       result[key] = value;
@@ -70,6 +78,14 @@ function parseJsonObjectEnv(name: string, fallback: string): Record<string, stri
   }
 }
 
+function parseTrackerProvider(value: string): TrackerProvider {
+  if (value === "http" || value === "configurable-http") {
+    return value;
+  }
+
+  throw new Error(`Invalid TRACKER_PROVIDER: ${value}`);
+}
+
 function parseLlmProvider(value: string): LlmProvider {
   if (value === "mock" || value === "universal") {
     return value;
@@ -79,7 +95,11 @@ function parseLlmProvider(value: string): LlmProvider {
 }
 
 function parseLlmApiStyle(value: string): LlmApiStyle {
-  if (value === "chat-completions" || value === "responses") {
+  if (
+    value === "chat-completions" ||
+    value === "responses" ||
+    value === "responses-raw"
+  ) {
     return value;
   }
 
@@ -97,8 +117,10 @@ export function loadConfig(): AppConfig {
     pollIntervalMs: Number(getEnv("POLL_INTERVAL_MS", "10000")),
 
     tracker: {
+      provider: parseTrackerProvider(getEnv("TRACKER_PROVIDER", "http")),
       baseUrl: getEnv("TRACKER_BASE_URL", "http://localhost:4000"),
       apiKey: process.env.TRACKER_API_KEY || undefined,
+      configPath: process.env.TRACKER_CONFIG_PATH || undefined,
     },
 
     llm: {

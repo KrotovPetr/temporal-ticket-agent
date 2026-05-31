@@ -1,0 +1,62 @@
+{
+  "name": "demo-http-tracker",
+  "operations": {
+    "listTickets": {
+      "method": "GET",
+      "url": "http://localhost:4000/tickets",
+      "response": {
+        "itemsPath": "$.tickets"
+      }
+    },
+    "addLabels": {
+      "method": "POST",
+      "url": "http://localhost:4000/tickets/{{ticketId}}/labels",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "labels": "{{labels}}"
+      }
+    },
+    "addComment": {
+      "method": "POST",
+      "url": "http://localhost:4000/tickets/{{ticketId}}/comments",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "comment": "{{comment}}"
+      }
+    },
+    "markProcessed": {
+      "method": "POST",
+      "url": "http://localhost:4000/tickets/{{ticketId}}/processed",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "ticketId": "{{ticketId}}",
+        "status": "{{status}}",
+        "analysis": "{{analysis}}",
+        "reason": "{{reason}}"
+      }
+    }
+  },
+  "mapping": {
+    "id": "$.id",
+    "title": "$.title",
+    "description": "$.description",
+    "url": "$.url",
+    "labels": "$.labels",
+    "attributes": {
+      "status": "$.attributes.status"
+    },
+    "metadata": {
+      "source": "demo"
+    }
+  },
+  "filters": {
+    "requiredLabels": [],
+    "excludedLabels": ["ai:processed", "ai-processed"]
+  }
+}

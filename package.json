@@ -5,13 +5,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "tsx src/index.ts",
+   "dev": "tsx src/index.ts",
     "demo-tracker": "tsx src/index.ts demo-tracker",
     "worker": "tsx src/index.ts worker",
     "poller": "tsx src/index.ts poller",
     "all": "tsx src/index.ts all",
     "demo-all": "tsx src/index.ts demo-all",
     "smoke:llm": "tsx src/llm/smokeTestUniversal.ts",
+    "smoke:tracker": "tsx src/adapters/smokeTestConfigurableTracker.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc"
   },
