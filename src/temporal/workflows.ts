@@ -1,10 +1,17 @@
-import { proxyActivities } from "@temporalio/workflow";
+import {
+  ChildWorkflowCancellationType,
+  ParentClosePolicy,
+  executeChild,
+  proxyActivities,
+  workflowInfo,
+} from "@temporalio/workflow";
 import type { Activities } from "./activities.js";
 import type {
+  ChildTicketWorkflowResult,
   MarkProcessedInput,
+  PollTrackerWorkflowResult,
   ProcessingStatus,
   Ticket,
-  WorkflowResult,
 } from "../types.js";
 
 const activities = proxyActivities<Activities>({
@@ -14,31 +21,77 @@ const activities = proxyActivities<Activities>({
   },
 });
 
-export async function ticketProcessingWorkflow(
+function statusFromDecision(decision: "llm" | "human" | "reject"): ProcessingStatus {
+  if (decision === "llm") return "llm_candidate";
+  if (decision === "reject") return "rejected";
+  return "human_required";
+}
+
+function childWorkflowIdForTicket(ticket: Ticket): string {
+  return `ticket-analysis-${ticket.id}`;
+}
+
+export async function ticketAnalysisWorkflow(
   ticket: Ticket,
-): Promise<WorkflowResult> {
-  const analysis = await activities.analyzeTicketActivity(ticket);
+): Promise<ChildTicketWorkflowResult> {
+  try {
+    const analysis = await activities.analyzeTicketActivity(ticket);
+    const status = statusFromDecision(analysis.decision);
 
-  let status: ProcessingStatus;
+    const markInput: MarkProcessedInput = {
+      ticketId: ticket.id,
+      status,
+      analysis,
+    };
 
-  if (analysis.decision === "llm") {
-    status = "llm_candidate";
-  } else if (analysis.decision === "reject") {
-    status = "rejected";
-  } else {
-    status = "human_required";
+    await activities.completeTicketProcessingActivity(markInput);
+
+    return {
+      ticketId: ticket.id,
+      status,
+    };
+  } catch (error) {
+    const reason =
+      error instanceof Error
+        ? error.message
+        : `Unknown workflow error: ${String(error)}`;
+
+    const markInput: MarkProcessedInput = {
+      ticketId: ticket.id,
+      status: "failed",
+      reason,
+    };
+
+    await activities.completeTicketProcessingActivity(markInput);
+
+    return {
+      ticketId: ticket.id,
+      status: "failed",
+    };
   }
+}
 
-  const markInput: MarkProcessedInput = {
-    ticketId: ticket.id,
-    status,
-    analysis,
-  };
+export async function pollTrackerWorkflow(): Promise<PollTrackerWorkflowResult> {
+  const info = workflowInfo();
+  const pollId = info.workflowId;
 
-  await activities.markProcessedActivity(markInput);
+  const tickets = await activities.getTicketsListActivity();
+
+  const childResults = await Promise.all(
+    tickets.map((ticket) =>
+      executeChild(ticketAnalysisWorkflow, {
+        workflowId: childWorkflowIdForTicket(ticket),
+        args: [ticket],
+        parentClosePolicy: ParentClosePolicy.PARENT_CLOSE_POLICY_ABANDON,
+        cancellationType:
+          ChildWorkflowCancellationType.WAIT_CANCELLATION_COMPLETED,
+      }),
+    ),
+  );
 
   return {
-    ticketId: ticket.id,
-    status,
+    pollId,
+    totalTickets: tickets.length,
+    results: childResults,
   };
 }

@@ -1,32 +1,47 @@
-# temporal-ticket-agent
+# ticket-autopilot
 
-Prototype for LLM-powered ticket triage with Temporal.
+MVP for tracker-agnostic ticket triage with Temporal and LLM.
 
-## What it does
+## Flow
 
-This prototype:
+1. Poller starts a parent Temporal workflow by schedule.
+2. Parent workflow calls tracker queue and gets pending tickets.
+3. Parent workflow starts a child workflow for every ticket.
+4. Child workflow analyzes ticket with LLM.
+5. Child workflow applies deterministic safety policy.
+6. Child workflow sets labels, adds comment, marks ticket as processed.
+7. Poller repeats.
 
-- polls tickets from a ticket source;
-- starts one Temporal workflow per ticket;
-- analyzes ticket with mock LLM or OpenAI-compatible LLM;
-- applies deterministic automation policy;
-- marks ticket as:
-  - `llm_candidate`
-  - `human_required`
-  - `rejected`
-  - `failed`
+## Current MVP
 
-## What it does not do yet
+Implemented:
 
-- does not generate code;
-- does not create branches;
-- does not create pull requests;
-- does not integrate with GitHub/Jira/Linear yet;
-- does not persist ticket source state outside process memory.
+- universal HTTP tracker adapter;
+- demo HTTP tracker;
+- Temporal parent workflow for polling cycle;
+- Temporal child workflow per ticket;
+- mock LLM;
+- OpenAI-compatible LLM client;
+- labels:
+  - `ai:processed`
+  - `ai:llm-candidate`
+  - `ai:human-required`
+  - `ai:rejected`
+  - `ai:failed`;
+- comments with analysis;
+- processed attributes.
 
-## Run locally
+Not implemented yet:
 
-Start Temporal:
+- PR creation;
+- code generation;
+- GitHub/Jira/Linear native adapters;
+- n8n adapter;
+- persistent demo tracker storage.
 
-```bash
-docker compose up -d
+## Tracker HTTP contract
+
+### Get pending tickets
+
+```http
+GET /tickets

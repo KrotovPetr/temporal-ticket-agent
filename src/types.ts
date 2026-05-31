@@ -4,6 +4,7 @@ export type Ticket = {
   description: string;
   url?: string;
   labels?: string[];
+  attributes?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 };
 
@@ -50,10 +51,21 @@ export type MarkProcessedInput = {
   reason?: string;
 };
 
+export type AddLabelsInput = {
+  ticketId: string;
+  labels: string[];
+};
+
+export type AddCommentInput = {
+  ticketId: string;
+  comment: string;
+};
+
 export interface TicketSourceAdapter {
   getTicketsList(): Promise<Ticket[]>;
   markProcessed(input: MarkProcessedInput): Promise<void>;
-  addComment?(ticketId: string, comment: string): Promise<void>;
+  addLabels(input: AddLabelsInput): Promise<void>;
+  addComment(input: AddCommentInput): Promise<void>;
 }
 
 export type AutomationPolicy = {
@@ -64,7 +76,13 @@ export type AutomationPolicy = {
   forbiddenKeywords: string[];
 };
 
-export type WorkflowResult = {
+export type ChildTicketWorkflowResult = {
   ticketId: string;
   status: ProcessingStatus;
+};
+
+export type PollTrackerWorkflowResult = {
+  pollId: string;
+  totalTickets: number;
+  results: ChildTicketWorkflowResult[];
 };

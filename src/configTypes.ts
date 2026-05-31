@@ -1,4 +1,8 @@
-import { AutomationPolicy } from "./types.js";
+import type { AutomationPolicy } from "./types.js";
+
+export type LlmProvider = "mock" | "universal";
+
+export type LlmApiStyle = "chat-completions" | "responses";
 
 export type AppConfig = {
   temporal: {
@@ -9,12 +13,24 @@ export type AppConfig = {
 
   pollIntervalMs: number;
 
-  llm: {
-    provider: "mock" | "openai-compatible";
+  tracker: {
     baseUrl: string;
     apiKey?: string;
-    model: string;
+  };
+
+  llm: {
+    provider: LlmProvider;
+    apiStyle: LlmApiStyle;
+    baseUrl: string;
+    apiKey?: string;
+    model?: string;
+    promptId?: string;
+    headers: Record<string, string>;
   };
 
   policy: AutomationPolicy;
+
+  demoTracker: {
+    port: number;
+  };
 };

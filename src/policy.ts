@@ -4,7 +4,10 @@ function includesIgnoreCase(text: string, needle: string): boolean {
   return text.toLowerCase().includes(needle.toLowerCase());
 }
 
-function hasAnyLabel(ticketLabels: string[] | undefined, labels: string[]): boolean {
+function hasAnyLabel(
+  ticketLabels: string[] | undefined,
+  labels: string[],
+): boolean {
   const normalizedTicketLabels = new Set(
     (ticketLabels ?? []).map((label) => label.toLowerCase()),
   );

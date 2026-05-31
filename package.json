@@ -1,14 +1,17 @@
 {
   "name": "temporal-ticket-agent",
   "version": "0.0.1",
-  "description": "Prototype for LLM-powered ticket triage with Temporal",
+  "description": "MVP for tracker-agnostic ticket triage with Temporal and LLM",
   "type": "module",
   "private": true,
   "scripts": {
     "dev": "tsx src/index.ts",
+    "demo-tracker": "tsx src/index.ts demo-tracker",
     "worker": "tsx src/index.ts worker",
     "poller": "tsx src/index.ts poller",
     "all": "tsx src/index.ts all",
+    "demo-all": "tsx src/index.ts demo-all",
+    "smoke:llm": "tsx src/llm/smokeTestUniversal.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc"
   },
@@ -16,11 +19,12 @@
     "@temporalio/client": "^1.11.7",
     "@temporalio/worker": "^1.11.7",
     "@temporalio/workflow": "^1.11.7",
-    "dotenv": "^16.4.5",
-    "zod": "^3.23.8"
+    "dotenv": "^16.4.7",
+    "openai": "^6.39.1",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
+    "@types/node": "^22.10.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

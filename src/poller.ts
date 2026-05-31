@@ -1,17 +1,13 @@
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/client";
 import type { AppConfig } from "./configTypes.js";
 import { createTemporalClient } from "./temporal/client.js";
-import { ticketProcessingWorkflow } from "./temporal/workflows.js";
-import type { Ticket, TicketSourceAdapter } from "./types.js";
+import { pollTrackerWorkflow } from "./temporal/workflows.js";
 
-function workflowIdForTicket(ticket: Ticket): string {
-  return `ticket-${ticket.id}`;
+function createPollWorkflowId(): string {
+  return `poll-tracker-${Date.now()}`;
 }
 
-export async function runPoller(
-  config: AppConfig,
-  ticketSource: TicketSourceAdapter,
-): Promise<void> {
+export async function runPoller(config: AppConfig): Promise<void> {
   const client = await createTemporalClient(config);
   let isPolling = false;
 
@@ -24,36 +20,24 @@ export async function runPoller(
     isPolling = true;
 
     try {
-      console.log("[poller] polling tickets...");
+      const workflowId = createPollWorkflowId();
 
-      const tickets = await ticketSource.getTicketsList();
+      console.log(`[poller] starting poll workflow: ${workflowId}`);
 
-      for (const ticket of tickets) {
-        const workflowId = workflowIdForTicket(ticket);
+      await client.workflow.start(pollTrackerWorkflow, {
+        taskQueue: config.temporal.taskQueue,
+        workflowId,
+        args: [],
+      });
 
-        try {
-          await client.workflow.start(ticketProcessingWorkflow, {
-            taskQueue: config.temporal.taskQueue,
-            workflowId,
-            args: [ticket],
-          });
-
-          console.log(
-            `[poller] started workflow ${workflowId} for ticket ${ticket.id}`,
-          );
-        } catch (error) {
-          if (error instanceof WorkflowExecutionAlreadyStartedError) {
-            console.log(
-              `[poller] workflow already started for ticket ${ticket.id}, ignoring`,
-            );
-            continue;
-          }
-
-          throw error;
-        }
-      }
+      console.log(`[poller] started poll workflow: ${workflowId}`);
     } catch (error) {
-      console.error("[poller] poll failed:", error);
+      if (error instanceof WorkflowExecutionAlreadyStartedError) {
+        console.log("[poller] poll workflow already started, ignoring");
+        return;
+      }
+
+      console.error("[poller] failed to start poll workflow:", error);
     } finally {
       isPolling = false;
     }

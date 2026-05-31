@@ -1,7 +1,7 @@
 import type { Ticket } from "../types.js";
 
 export function buildAnalyzeTicketPrompt(ticket: Ticket): string {
-    return `
+  return `
 You are a senior software engineer and triage assistant.
 
 Your job is to decide whether this ticket is safe for autonomous LLM implementation.
