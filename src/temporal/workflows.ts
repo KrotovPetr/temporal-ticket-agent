@@ -7,6 +7,7 @@ import {
 } from "@temporalio/workflow";
 import type { Activities } from "./activities.js";
 import type {
+  AnalysisDecision,
   ChildTicketWorkflowResult,
   MarkProcessedInput,
   PollTrackerWorkflowResult,
@@ -21,9 +22,10 @@ const activities = proxyActivities<Activities>({
   },
 });
 
-function statusFromDecision(decision: "llm" | "human" | "reject"): ProcessingStatus {
+function statusFromDecision(decision: AnalysisDecision): ProcessingStatus {
   if (decision === "llm") return "llm_candidate";
   if (decision === "reject") return "rejected";
+  if (decision === "needs_context") return "needs_context";
   return "human_required";
 }
 

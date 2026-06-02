@@ -8,7 +8,7 @@ export type Ticket = {
   metadata?: Record<string, unknown>;
 };
 
-export type AnalysisDecision = "llm" | "human" | "reject";
+export type AnalysisDecision = "llm" | "human" | "reject" | "needs_context";
 
 export type TicketCategory =
   | "docs"
@@ -42,6 +42,7 @@ export type ProcessingStatus =
   | "llm_candidate"
   | "human_required"
   | "rejected"
+  | "needs_context"
   | "failed";
 
 export type MarkProcessedInput = {

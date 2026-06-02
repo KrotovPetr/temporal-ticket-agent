@@ -4,7 +4,7 @@ import { DemoTrackerStore } from "./store.js";
 
 const MarkProcessedSchema = z.object({
   ticketId: z.string(),
-  status: z.enum(["llm_candidate", "human_required", "rejected", "failed"]),
+  status: z.enum(["llm_candidate", "human_required", "rejected", "needs_context", "failed"]),
   analysis: z
     .object({
       decision: z.enum(["llm", "human", "reject"]),

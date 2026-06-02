@@ -336,6 +336,7 @@ export class ConfigurableHttpTrackerAdapter implements TicketSourceAdapter {
         llm_candidate: ["ai:processed", "ai:llm-candidate"],
         human_required: ["ai:processed", "ai:human-required"],
         rejected: ["ai:processed", "ai:rejected"],
+        needs_context: ["ai:processed", "ai:needs-context"],
         failed: ["ai:processed", "ai:failed"],
       };
 

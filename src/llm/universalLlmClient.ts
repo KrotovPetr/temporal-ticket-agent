@@ -6,7 +6,7 @@ import type { LlmClient } from "./llmClient.js";
 import { buildAnalyzeTicketPrompt } from "./prompts.js";
 
 const TicketAnalysisSchema = z.object({
-  decision: z.enum(["llm", "human", "reject"]),
+  decision: z.enum(["llm", "human", "needs_context", "reject"]),
   confidence: z.number().min(0).max(1),
   category: z.enum([
     "docs",
@@ -87,6 +87,10 @@ export class UniversalLlmClient implements LlmClient {
       return this.callResponsesApi(input);
     }
 
+    if (this.options.apiStyle === "responses-raw") {
+      return this.callResponsesRawApi(input);
+    }
+
     return this.callChatCompletionsApi(input);
   }
 
@@ -108,6 +112,46 @@ export class UniversalLlmClient implements LlmClient {
     const response = await this.client.responses.create(payload);
 
     return response.output_text ?? "";
+  }
+
+  private async callResponsesRawApi(input: string): Promise<string> {
+    if (!this.options.model) {
+      throw new Error("LLM_MODEL is required for responses-raw API style");
+    }
+
+    const baseUrl = this.options.baseUrl.replace(/\/$/, "");
+    const url = `${baseUrl}/responses`;
+
+    const body: Record<string, unknown> = {
+      model: this.options.model,
+      input,
+    };
+
+    if (this.options.promptId) {
+      body.prompt = { id: this.options.promptId };
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.options.apiKey ?? "unused"}`,
+        ...this.options.headers,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const text = await response.text();
+
+    if (!response.ok) {
+      throw new Error(
+        `LLM responses-raw request failed: ${response.status} ${response.statusText}: ${text}`,
+      );
+    }
+
+    const json = JSON.parse(text) as { output_text?: string };
+
+    return json.output_text ?? "";
   }
 
   private async callChatCompletionsApi(input: string): Promise<string> {

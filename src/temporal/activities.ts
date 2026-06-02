@@ -16,6 +16,7 @@ function labelsForStatus(status: ProcessingStatus): string[] {
     llm_candidate: "ai:llm-candidate",
     human_required: "ai:human-required",
     rejected: "ai:rejected",
+    needs_context: "ai:needs-context",
     failed: "ai:failed",
   };
 
@@ -34,7 +35,7 @@ function formatComment(input: MarkProcessedInput): string {
       .join("\n");
   }
 
-  return [
+  const lines = [
     `AI triage result: ${input.status}`,
     ``,
     `Decision: ${analysis.decision}`,
@@ -43,7 +44,17 @@ function formatComment(input: MarkProcessedInput): string {
     `Category: ${analysis.category}`,
     `Complexity: ${analysis.estimatedComplexity}`,
     `Reason: ${analysis.reason}`,
-  ].join("\n");
+  ];
+
+  if (analysis.requiredContext && analysis.requiredContext.length > 0) {
+    lines.push(
+      ``,
+      `To continue triage, please add the following context to this ticket:`,
+      ...analysis.requiredContext.map((item) => `- ${item}`),
+    );
+  }
+
+  return lines.join("\n");
 }
 
 export function createActivities(deps: {

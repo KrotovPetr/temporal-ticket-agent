@@ -82,6 +82,7 @@
     "ai:llm-candidate": "ai-llm-candidate",
     "ai:human-required": "ai-human-required",
     "ai:rejected": "ai-rejected",
+    "ai:needs-context": "ai-needs-context",
     "ai:failed": "ai-failed"
   }
 }

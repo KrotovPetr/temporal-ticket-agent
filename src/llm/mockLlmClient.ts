@@ -84,14 +84,17 @@ export class MockLlmClient implements LlmClient {
     }
 
     return {
-      decision: "human",
-      confidence: 0.6,
+      decision: "needs_context",
+      confidence: 0.5,
       category: "unknown",
       estimatedComplexity: "unknown",
       risk: "medium",
       reason:
-        "Ticket does not have enough clear context to safely automate in this prototype.",
-      requiredContext: ["More precise acceptance criteria"],
+        "Ticket does not have enough clear context to make a triage decision.",
+      requiredContext: [
+        "Acceptance criteria or expected behaviour",
+        "Affected component or module",
+      ],
     };
   }
 }
